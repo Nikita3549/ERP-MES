@@ -34,6 +34,10 @@ type DBConfig struct {
 	User     string `env:"DB_USER" default:"postgres"`
 }
 
+func (d *DBConfig) DSN() string {
+	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable", d.Host, d.User, d.Password, d.Name, d.Port)
+}
+
 func LoadConfig() *Config {
 	if err := godotenv.Load(".env"); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		log.Fatalf("load config: %v", err)

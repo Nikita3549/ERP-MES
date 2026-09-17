@@ -2,6 +2,7 @@ package health
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"time"
 
@@ -14,13 +15,17 @@ const (
 	StatusDead = "dead"
 )
 
+type DB interface {
+	Health(context.Context) error
+}
+
 type Handler struct {
-	*db.DB
+	db DB
 }
 
 func NewHandler(router *http.ServeMux, DB *db.DB) {
 	handler := &Handler{
-		DB,
+		db: DB,
 	}
 
 	router.HandleFunc("GET /health", handler.Health())
@@ -28,23 +33,26 @@ func NewHandler(router *http.ServeMux, DB *db.DB) {
 
 func (h *Handler) Health() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		statusMessage := StatusOK
+		dbStatus := StatusOK
 		statusCode := http.StatusOK
 		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 		defer cancel()
 
 		err := h.DB.Health(ctx)
 		if err != nil {
-			statusMessage = StatusDead
+			dbStatus = StatusDead
 			statusCode = http.StatusServiceUnavailable
+			log.Printf("database ping: %v", err)
 		}
 
 		res.JSON(w, statusCode, HealthRes{
-			Status: statusMessage,
+			Status:   StatusOK,
+			DBStatus: dbStatus,
 		})
 	}
 }
 
 type HealthRes struct {
-	Status string `json:"status"`
+	Status   string `json:"status"`
+	DBStatus string `json:"databaseStatus"`
 }
