@@ -20,17 +20,17 @@ func main() {
 	defer stop()
 
 	conf := configs.LoadConfig()
-	DB, DBErr := db.NewDB(conf)
-	if DBErr != nil {
-		log.Fatalf("Database error: %v", DBErr)
+	db, dbErr := db.NewDB(conf)
+	if dbErr != nil {
+		log.Fatalf("Database error: %v", dbErr)
 	}
 
 	router := http.NewServeMux()
 
 	// Handlers
-	health.NewHandler(router, DB)
+	health.NewHandler(router, db)
 
-	port := conf.Port
+	port := conf.HTTPConfig.Port
 
 	server := &http.Server{
 		Handler:           router,
@@ -69,8 +69,17 @@ func main() {
 		_ = server.Close()
 	}
 
-	if err := DB.Close(); err != nil {
-		log.Printf("Database error: %v\n", err)
+	dbClosed := make(chan error, 1)
+	go func() { dbClosed <- db.Close() }()
+
+	select {
+	case err := <-dbClosed:
+		if err != nil {
+			log.Printf("Database close error: %v", err)
+		}
+	case <-shutdownCtx.Done():
+		log.Printf("Database close timeout: %v", shutdownCtx.Err())
+		exitErr = shutdownCtx.Err()
 	}
 
 	if exitErr != nil {

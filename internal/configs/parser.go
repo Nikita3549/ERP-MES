@@ -22,14 +22,23 @@ func ParseConfig(cfg any) []error {
 		if kind != reflect.Ptr {
 			envTag = field.Tag.Get("env")
 			isOptional := field.Tag.Get("optional") == "true"
+			defaultValue := field.Tag.Get("default")
+
 			if envTag == "" {
 				errs = append(errs, fmt.Errorf("missing env tag for var %s", field.Name))
 				continue
 			}
 
 			value = os.Getenv(envTag)
+
+			if value == "" {
+				value = defaultValue
+			}
 			if value == "" && !isOptional {
 				errs = append(errs, fmt.Errorf("missing env variable %s", envTag))
+				continue
+			}
+			if value == "" {
 				continue
 			}
 		}
