@@ -3,9 +3,6 @@ package db
 
 import (
 	"context"
-	"fmt"
-
-	"erp-mes/internal/configs"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -15,9 +12,7 @@ type DB struct {
 	*gorm.DB
 }
 
-func NewDB(conf *configs.Config) (*DB, error) {
-	DSN := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable", conf.DBConfig.Host, conf.DBConfig.User, conf.DBConfig.Password, conf.DBConfig.Name, conf.DBConfig.Port)
-
+func NewDB(DSN string) (*DB, error) {
 	db, err := gorm.Open(postgres.Open(DSN), &gorm.Config{})
 	if err != nil {
 		return nil, err

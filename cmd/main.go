@@ -20,7 +20,7 @@ func main() {
 	defer stop()
 
 	conf := configs.LoadConfig()
-	db, dbErr := db.NewDB(conf)
+	db, dbErr := db.NewDB(conf.DSN())
 	if dbErr != nil {
 		log.Fatalf("Database error: %v", dbErr)
 	}
