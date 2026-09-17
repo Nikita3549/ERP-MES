@@ -38,7 +38,7 @@ func (h *Handler) Health() http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 		defer cancel()
 
-		err := h.DB.Health(ctx)
+		err := h.db.Health(ctx)
 		if err != nil {
 			dbStatus = StatusDead
 			statusCode = http.StatusServiceUnavailable
