@@ -29,6 +29,7 @@ func NewHandler(router *http.ServeMux, DB *db.DB) {
 	}
 
 	router.HandleFunc("GET /health", handler.Health())
+	router.HandleFunc("GET /ready", handler.Ready())
 }
 
 func (h *Handler) Health() http.HandlerFunc {
