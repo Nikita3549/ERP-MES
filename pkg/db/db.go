@@ -4,8 +4,6 @@ package db
 import (
 	"context"
 
-	"erp-mes/internal/configs"
-
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -14,8 +12,8 @@ type DB struct {
 	*gorm.DB
 }
 
-func NewDB(conf *configs.Config) (*DB, error) {
-	db, err := gorm.Open(postgres.Open(conf.DBConfig.DSN), &gorm.Config{})
+func NewDB(DSN string) (*DB, error) {
+	db, err := gorm.Open(postgres.Open(DSN), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
