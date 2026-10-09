@@ -43,6 +43,8 @@ FROM (
     ('SF-GLAZE', 1, 'RM-COCOA-P', 0.400),
     ('SF-GLAZE', 1, 'RM-COCOA-B', 0.250),
     ('SF-GLAZE', 1, 'RM-SUGAR', 0.350),
+    ('SF-NOUGAT', 1, 'RM-SUGAR', 0.500),
+    ('SF-NOUGAT', 1, 'RM-MILK-P', 0.500),
     ('SF-CARAMEL', 1, 'RM-SUGAR', 0.700),
     ('SF-CARAMEL', 1, 'RM-MILK-P', 0.300),
     ('FP-BAR-PNT', 1, 'SF-GLAZE', 0.020),
