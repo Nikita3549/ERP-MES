@@ -1,26 +1,21 @@
-FROM golang:1.26.4 as build
+FROM golang:1.26.4 AS build
 WORKDIR /opt/api
 
 COPY go.mod go.sum ./
-
-RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+RUN go mod download
 
 COPY ./internal ./internal
 COPY ./cmd ./cmd
 COPY ./pkg ./pkg
 
-RUN go build ./cmd/main.go
+RUN CGO_ENABLED=0 go build -o main ./cmd
 
-FROM node:22-slim
+FROM alpine:3.24.2
 WORKDIR /opt/api
 
-COPY --chown=node:node ./migrations /opt/api/migrations
-COPY --from=build --chown=node:node /opt/api/main /opt/api/main
-COPY --from=build /go/bin/migrate /usr/local/bin/migrate
+RUN adduser -D -H app
 
-USER node
+COPY --from=build --chown=app:app /opt/api/main /opt/api/main
 
-CMD . ./.env \
-  && migrate -path migrations -database "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable" up \
-  && exec ./main
-
+USER app
+ENTRYPOINT [ "./main" ]

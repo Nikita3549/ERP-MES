@@ -2,6 +2,7 @@ package health
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"time"
 
@@ -11,40 +12,56 @@ import (
 
 const (
 	StatusOK   = "ok"
-	StatusDead = "dead"
+	StatusFail = "fail"
 )
 
+type DB interface {
+	Health(context.Context) error
+}
+
 type Handler struct {
-	*db.DB
+	db DB
 }
 
 func NewHandler(router *http.ServeMux, DB *db.DB) {
 	handler := &Handler{
-		DB,
+		db: DB,
 	}
 
 	router.HandleFunc("GET /health", handler.Health())
+	router.HandleFunc("GET /ready", handler.Ready())
 }
 
 func (h *Handler) Health() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		statusMessage := StatusOK
-		statusCode := http.StatusOK
-		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
-		defer cancel()
-
-		err := h.DB.Health(ctx)
-		if err != nil {
-			statusMessage = StatusDead
-			statusCode = http.StatusServiceUnavailable
-		}
-
-		res.JSON(w, statusCode, HealthRes{
-			Status: statusMessage,
+		res.JSON(w, http.StatusOK, HealthRes{
+			Status: StatusOK,
 		})
 	}
 }
 
+func (h *Handler) Ready() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		status := StatusOK
+		code := http.StatusOK
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		err := h.db.Health(ctx)
+		if err != nil {
+			status = StatusFail
+			code = http.StatusServiceUnavailable
+			log.Printf("database ping error: %v", err)
+		}
+
+		res.JSON(w, code, ReadyRes{Status: status})
+	}
+}
+
 type HealthRes struct {
+	Status string `json:"status"`
+}
+
+type ReadyRes struct {
 	Status string `json:"status"`
 }
